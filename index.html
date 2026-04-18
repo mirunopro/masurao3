@@ -21,7 +21,7 @@ canvas{display:block;width:100%;height:100%;}
 .char-card.selected{border-color:#f5e642;background:rgba(245,230,66,0.1);transform:scale(0.97);}
 .char-name{font-size:clamp(15px,4.5vw,20px);font-weight:900;letter-spacing:1px;margin-top:6px;}
 .char-desc{font-size:10px;color:#888;margin-top:3px;}
-.big-btn{background:linear-gradient(135deg,#f5e642,#e89000);border:none;border-radius:12px;padding:14px 40px;font-size:clamp(16px,4.5vw,22px);font-weight:900;color:#1a0a2e;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 0 #7a5000;transition:transform .08s,box-shadow .08s;}
+.big-btn{touch-action:manipulation;cursor:pointer;background:linear-gradient(135deg,#f5e642,#e89000);border:none;border-radius:12px;padding:14px 40px;font-size:clamp(16px,4.5vw,22px);font-weight:900;color:#1a0a2e;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 0 #7a5000;transition:transform .08s,box-shadow .08s;}
 .big-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #7a5000;}
 .big-btn.dis{opacity:.35;pointer-events:none;}
 #gui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;}
@@ -76,13 +76,13 @@ canvas.dp{image-rendering:pixelated;width:56px;height:64px;display:block;margin:
 <div class="screen" id="scTitle">
   <div class="game-title">益荒男<br>登山</div>
   <div class="sub">⛰️ 4人で頂上を目指せ！</div>
-  <button class="big-btn" id="btnTitle">スタート</button>
+  <button class="big-btn" id="btnTitle" onclick="getAC();gotoSelect()">スタート</button>
 </div>
 <div class="screen hidden" id="scSel">
   <div class="sel-title">キャラ選択</div>
   <div class="sel-sub">誰で頂上を目指す？</div>
   <div class="char-grid" id="cgrid"></div>
-  <button class="big-btn dis" id="btnStart">決定！</button>
+  <button class="big-btn dis" id="btnStart" onclick="if(pi>=0)startGame()">決定！</button>
 </div>
 <div id="gui" class="hidden">
   <div id="pb"></div>
@@ -99,7 +99,7 @@ canvas.dp{image-rendering:pixelated;width:56px;height:64px;display:block;margin:
 <div class="screen hidden" id="scRes">
   <div class="res-title">⛳ 登頂結果</div>
   <div id="rl"></div>
-  <button class="big-btn" id="btnRetry">もう一度！</button>
+  <button class="big-btn" id="btnRetry" onclick="gotoSelect()">もう一度！</button>
 </div>
 </div>
 <script>
@@ -251,17 +251,21 @@ row.innerHTML=`<div class="rrk">${med[rank]||rank+1}</div><div class="rnm" style
 rl.appendChild(row);
 });
 }
-document.getElementById(‘btnTitle’).addEventListener(‘click’,()=>{getAC();gotoSelect();});
-document.getElementById(‘btnStart’).addEventListener(‘click’,()=>startGame());
-document.getElementById(‘btnRetry’).addEventListener(‘click’,()=>gotoSelect());
+// buttons use onclick attributes for Safari compatibility
 
 // ===== CHAR GRID =====
+function selectChar(i,d){
+document.querySelectorAll(’.char-card’).forEach(x=>x.classList.remove(‘selected’));
+d.classList.add(‘selected’);pi=i;
+document.getElementById(‘btnStart’).classList.remove(‘dis’);
+}
 function buildGrid(){
 const g=document.getElementById(‘cgrid’);g.innerHTML=’’;
 CHARS.forEach((c,i)=>{
 const d=document.createElement(‘div’);d.className=‘char-card’;
 d.innerHTML=`<canvas class="dp" id="dp${i}"></canvas><div class="char-name" style="color:${c.fc}">${c.name}</div><div class="char-desc">${c.desc}</div>`;
-d.addEventListener(‘click’,()=>{document.querySelectorAll(’.char-card’).forEach(x=>x.classList.remove(‘selected’));d.classList.add(‘selected’);pi=i;document.getElementById(‘btnStart’).classList.remove(‘dis’);});
+d.addEventListener(‘touchstart’,e=>{e.preventDefault();selectChar(i,d);},{passive:false});
+d.addEventListener(‘click’,()=>{selectChar(i,d);});
 g.appendChild(d);
 setTimeout(()=>{const pc=document.getElementById(‘dp’+i);if(pc)drawPreview(pc,i);},0);
 });
